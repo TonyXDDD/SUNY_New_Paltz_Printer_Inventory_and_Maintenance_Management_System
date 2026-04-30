@@ -6,11 +6,9 @@ const cors = require('cors');
 const axios = require('axios');
 
 const app = express();
-
 app.use(cors());
 app.use(express.json());
 
-//connect database
 const db = mysql.createPool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -18,11 +16,9 @@ const db = mysql.createPool({
     database: process.env.DB_NAME
 });
 
-
 async function sync() {
     try {
         console.log("Running sync...");
-
         const res = await axios.get('https://print.newpaltz.edu/api/data/acs_printer_data.json');
         const data = res.data;
 
@@ -32,25 +28,16 @@ async function sync() {
         `);
 
         let allPrinters = [];
-
-        for (let p of data.devices) {
-            p.is_error = false;
-            allPrinters.push(p);
-        }
-        for (let p of data.devices_error) {
-            p.is_error = true;
-            allPrinters.push(p);
-        }
+        for (let p of data.devices) { p.is_error = false; allPrinters.push(p); }
+        for (let p of data.devices_error) { p.is_error = true; allPrinters.push(p); }
 
         console.log("Total printers from API:", allPrinters.length);
 
         for (const p of allPrinters) {
-            p.black    = p.black    != null ? parseInt(p.black)    : null;
-            p.cyan     = p.cyan     != null ? parseInt(p.cyan)     : null;
-            p.magenta  = p.magenta  != null ? parseInt(p.magenta)  : null;
-            p.yellow   = p.yellow   != null ? parseInt(p.yellow)   : null;
-
-            const isError = p.is_error ? 1 : 0;
+            p.black   = p.black   != null ? parseInt(p.black)   : null;
+            p.cyan    = p.cyan    != null ? parseInt(p.cyan)    : null;
+            p.magenta = p.magenta != null ? parseInt(p.magenta) : null;
+            p.yellow  = p.yellow  != null ? parseInt(p.yellow)  : null;
 
             await db.execute(`
                 INSERT INTO printers 
@@ -64,13 +51,12 @@ async function sync() {
             `, [
                 p.serial_number || p.name, p.name, p.ip, p.location,
                 p.status || "OK", p.uptime, p.hardware || null,
-                parseInt(p.page_count) || 0, p.color || false, isError,
+                parseInt(p.page_count) || 0, p.color || false, p.is_error ? 1 : 0,
                 p.black, p.cyan, p.magenta, p.yellow
             ]);
         }
 
         console.log("SYNC COMPLETE:", allPrinters.length);
-
     } catch (err) {
         console.error("SYNC ERROR:", err.message);
     }
@@ -83,7 +69,6 @@ cron.schedule('*/2 * * * *', () => {
     console.log("CRON FIRED at:", new Date().toLocaleTimeString());
     sync();
 });
-
 
 app.get('/printers', async (req, res) => {
     try {
@@ -105,7 +90,6 @@ app.get('/history/:serial', async (req, res) => {
         `, [req.params.serial]);
         res.json(rows);
     } catch (err) {
-        console.error(err);
         res.status(500).send("Error fetching history");
     }
 });
@@ -113,41 +97,28 @@ app.get('/history/:serial', async (req, res) => {
 app.post('/history', async (req, res) => {
     try {
         const { printer_serial, user_id, notes } = req.body;
-        if (!printer_serial || !user_id || !notes) {
-            return res.status(400).send("Missing fields");
-        }
-        await db.execute(`
-            INSERT INTO work_history (printer_serial, user_id, notes) VALUES (?, ?, ?)
-        `, [printer_serial, user_id, notes]);
+        if (!printer_serial || !user_id || !notes) return res.status(400).send("Missing fields");
+        await db.execute(`INSERT INTO work_history (printer_serial, user_id, notes) VALUES (?, ?, ?)`, [printer_serial, user_id, notes]);
         res.send("History added");
     } catch (err) {
-        console.error(err);
         res.status(500).send("Error adding history");
     }
 });
 
-
 app.post('/register', async (req, res) => {
     const { username, password } = req.body;
-    console.log("Register hit:", username);
     try {
-        await db.execute(
-            'INSERT INTO users (username, password) VALUES (?, ?)',
-            [username, password]
-        );
+        await db.execute('INSERT INTO users (username, password) VALUES (?, ?)', [username, password]);
         res.json({ message: "Registered successfully" });
     } catch (err) {
-        if (err.code === 'ER_DUP_ENTRY') {
-            return res.status(400).json({ message: "Username already exists" });
-        }
-        console.error(err);
+        if (err.code === 'ER_DUP_ENTRY') return res.status(400).json({ message: "Username already exists" });
         res.status(500).json({ message: "Server error" });
     }
 });
 
 app.post('/login', async (req, res) => {
-    const { username, password } = req.body;
     try {
+        const { username, password } = req.body;
         const [rows] = await db.query(
             'SELECT user_id, username FROM users WHERE username = ? AND password = ?',
             [username, password]
@@ -158,18 +129,15 @@ app.post('/login', async (req, res) => {
             res.status(401).json({ message: "Invalid login" });
         }
     } catch (err) {
-        console.error(err);
         res.status(500).json({ message: "Server error" });
     }
 });
-
 
 app.get('/locations', async (req, res) => {
     try {
         const [rows] = await db.query('SELECT * FROM locations ORDER BY type, group_name, name');
         res.json(rows);
     } catch (err) {
-        console.error(err);
         res.status(500).send("Error fetching locations");
     }
 });
@@ -181,11 +149,10 @@ app.get('/toner/:location_id', async (req, res) => {
             FROM toner_log tl
             JOIN users u ON tl.counted_by = u.user_id
             WHERE tl.location_id = ?
-            ORDER BY tl.counted_at DESC
+            ORDER BY tl.toner_model ASC
         `, [req.params.location_id]);
         res.json(rows);
     } catch (err) {
-        console.error(err);
         res.status(500).send("Error fetching toner log");
     }
 });
@@ -193,16 +160,27 @@ app.get('/toner/:location_id', async (req, res) => {
 app.post('/toner', async (req, res) => {
     try {
         const { location_id, toner_model, quantity, user_id } = req.body;
-        if (!location_id || !toner_model || quantity == null || !user_id) {
-            return res.status(400).send("Missing fields");
-        }
+        if (!location_id || !toner_model || quantity == null || !user_id) return res.status(400).send("Missing fields");
         await db.execute(`
-            INSERT INTO toner_log (location_id, toner_model, quantity, counted_by) VALUES (?, ?, ?, ?)
+            INSERT INTO toner_log (location_id, toner_model, quantity, counted_by)
+            VALUES (?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE
+                quantity = VALUES(quantity),
+                counted_by = VALUES(counted_by),
+                counted_at = CURRENT_TIMESTAMP
         `, [location_id, toner_model, quantity, user_id]);
-        res.send("Toner count added");
+        res.send("Toner count updated");
     } catch (err) {
-        console.error(err);
-        res.status(500).send("Error adding toner count");
+        res.status(500).send("Error updating toner count");
+    }
+});
+
+app.delete('/toner/:log_id', async (req, res) => {
+    try {
+        await db.execute('DELETE FROM toner_log WHERE log_id = ?', [req.params.log_id]);
+        res.send("Deleted");
+    } catch (err) {
+        res.status(500).send("Error deleting toner entry");
     }
 });
 
@@ -213,11 +191,9 @@ app.get('/paper/:location_id', async (req, res) => {
             FROM paper_log pl
             JOIN users u ON pl.counted_by = u.user_id
             WHERE pl.location_id = ?
-            ORDER BY pl.counted_at DESC
         `, [req.params.location_id]);
         res.json(rows);
     } catch (err) {
-        console.error(err);
         res.status(500).send("Error fetching paper log");
     }
 });
@@ -225,19 +201,29 @@ app.get('/paper/:location_id', async (req, res) => {
 app.post('/paper', async (req, res) => {
     try {
         const { location_id, quantity, user_id } = req.body;
-        if (!location_id || quantity == null || !user_id) {
-            return res.status(400).send("Missing fields");
-        }
+        if (!location_id || quantity == null || !user_id) return res.status(400).send("Missing fields");
         await db.execute(`
-            INSERT INTO paper_log (location_id, quantity, counted_by) VALUES (?, ?, ?)
+            INSERT INTO paper_log (location_id, quantity, counted_by)
+            VALUES (?, ?, ?)
+            ON DUPLICATE KEY UPDATE
+                quantity = VALUES(quantity),
+                counted_by = VALUES(counted_by),
+                counted_at = CURRENT_TIMESTAMP
         `, [location_id, quantity, user_id]);
-        res.send("Paper count added");
+        res.send("Paper count updated");
     } catch (err) {
-        console.error(err);
-        res.status(500).send("Error adding paper count");
+        res.status(500).send("Error updating paper count");
     }
 });
 
+app.delete('/paper/:log_id', async (req, res) => {
+    try {
+        await db.execute('DELETE FROM paper_log WHERE log_id = ?', [req.params.log_id]);
+        res.send("Deleted");
+    } catch (err) {
+        res.status(500).send("Error deleting paper entry");
+    }
+});
 
 app.listen(process.env.PORT || 3000, () => {
     console.log("Server running on http://localhost:" + (process.env.PORT || 3000));
