@@ -1,18 +1,20 @@
 <template>
   <div class="auth-container">
-
+    <!-- dual page between login and register -->
     <h1>{{ isLogin ? "Login" : "Register" }}</h1>
-
+    <!-- form formatting, same for login and register -->
     <div class="form">
 
       <input v-model="username" type="text" placeholder="Username" />
 
       <input v-model="password" type="password" placeholder="Password" />
 
+      <!-- handles submit differently based on type of submission-->
       <button @click="handleSubmit">
         {{ isLogin ? "Login" : "Register" }}
       </button>
 
+      <!-- switch logic between login and register -->
       <p class="switch">
         <span v-if="isLogin">
           Don't have an account?
@@ -25,6 +27,7 @@
         </span>
       </p>
 
+      <!-- login status message -->
       <p v-if="message" class="message">{{ message }}</p>
 
     </div>
@@ -41,6 +44,7 @@ const username = ref('')
 const password = ref('')
 const message = ref('')
 
+//handles login/registration information
 async function handleSubmit() {
   if (!username.value || !password.value) {
     message.value = "Fill in all fields"

@@ -5,6 +5,7 @@ import { ref, onMounted } from 'vue'
 
 const user = ref(null)
 
+//load user info from local storage
 onMounted(() => {
   const user_id = localStorage.getItem('user_id')
   const username = localStorage.getItem('username')

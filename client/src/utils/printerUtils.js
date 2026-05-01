@@ -9,7 +9,8 @@ export function isLowToner(printer) {
   )
 }
 
-//returns the status of an problem printer
+//the functions below are the same as function in Navbar.vue, 
+//simply here for testing purposes
 export function getStatus(p) {
     if (p.is_error || p.status?.toLowerCase().includes("offline")) {
         return "ERROR"
@@ -24,8 +25,6 @@ export function getSeverityClass(p) {
     return "warning-item"
 }
 
-//function the same as function in Navbar.vue, 
-//simply here for testing purposes
 export function filterProblemPrinters(printers) {
   return printers.filter(p =>
     p.is_error ||

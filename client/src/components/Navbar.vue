@@ -7,12 +7,13 @@
 
             <div class="nav-links">
 
+                <!-- Navbar links, main pages are protected from non-logged in users -->
                 <RouterLink to="/">Home</RouterLink>
                 <a @click="goProtected('/Academic')">Academic Buildings</a>
                 <a @click="goProtected('/Dorms')">Dormitories</a>
                 <a @click="goProtected('/Storage')">Storage</a>
 
-                <!-- only show when logged in -->
+                <!-- problem printer notif tab (only appears once logged in) -->
                 <div class="warning-wrapper" v-if="username && problemPrinters.length > 0">
                     <div class="warning-icon" @click="togglePanel">
                         ⚠️ {{ problemPrinters.length }}
@@ -21,6 +22,8 @@
                     <div v-if="showPanel" class="warning-panel">
                         <h3>Printers with Issues</h3>
 
+                        <!-- printer information formatting for problem printer tab -->
+                        <!-- on click, go to the tab the printer is located-->
                         <div class="warning-list">
                             <div 
                                 v-for="p in problemPrinters" 
@@ -38,6 +41,7 @@
                     </div>
                 </div>
 
+                <!-- diplays username if logged in and logout button -->
                 <span v-if="username" class="user">
                     Logged in as <b>{{ username }}</b>
                 </span>
@@ -46,6 +50,7 @@
                     Logout
                 </button>
 
+                <!-- displays login button if user is not logged in -->
                 <RouterLink v-else to="/Auth">Login</RouterLink>
 
             </div>
@@ -62,6 +67,8 @@ const router = useRouter()
 const username = ref(null)
 const showPanel = ref(false)
 
+//if a username exists on the local system (user is logged in), 
+//then load printer information
 onMounted(async () => {
     username.value = localStorage.getItem("username")
 
@@ -70,6 +77,8 @@ onMounted(async () => {
     }
 })
 
+//filter printers based on if they are online, have an error,
+//or are low on any color toner
 const problemPrinters = computed(() => {
     return printers.value.filter(p =>
         p.is_error ||
@@ -81,10 +90,13 @@ const problemPrinters = computed(() => {
     )
 })
 
+//toggles the visibility of a panel 
+// (used for clicking on the problem printer tab)
 function togglePanel() {
     showPanel.value = !showPanel.value
 }
 
+//returns the status of a problem printer 
 function getStatus(p) {
     if (p.is_error || p.status?.toLowerCase().includes("offline")) {
         return "ERROR"
@@ -92,6 +104,7 @@ function getStatus(p) {
     return "LOW TONER"
 }
 
+//returns the severity of the warning for a printer, whether its offline or not
 function getSeverityClass(p) {
     if (p.is_error || p.status?.toLowerCase().includes("offline")) {
         return "error-item"
@@ -99,6 +112,8 @@ function getSeverityClass(p) {
     return "warning-item"
 }
 
+//on click function, looks at the location of the printer,
+//routes to correct page according to the location
 function goToPrinter(p) {
     showPanel.value = false
 
@@ -138,11 +153,15 @@ function goToPrinter(p) {
     router.push('/Storage')
 }
 
+//on logout, clears the local storage/current user 
+//and returns to the main page of the site
 function logout() {
     localStorage.clear()
     window.location.href = "/"
 }
 
+//protects the site from unauthroized/non-logged-in users,
+//reroutes on each link to the login page
 function goProtected(path) {
     const user = localStorage.getItem("user_id")
     if (!user) router.push('/Auth')

@@ -2,18 +2,20 @@
   <div class="academic">
     <h1>Academic Buildings</h1>
 
+    <!-- loading or error messages upon opening -->
     <div v-if="loading">Loading...</div>
     <div v-if="error">{{ error }}</div>
 
+    <!-- printer groups -->
     <div class="cards">
       <div v-for="(printers, building) in groupedPrinters" :key="building">
-
+        <!-- building sections -->
         <div class="building-header" @click="toggle(building)">
           {{ building }} {{ open[building] ? '▲' : '▼' }}
         </div>
-
+        <!-- opens printer list -->
         <div v-if="open[building]" class="printer-list">
-
+          <!-- printer information and formatting -->
           <div
             v-for="printer in printers"
             :key="printer.serial_number"
@@ -29,7 +31,8 @@
             <p><b>Status:</b> {{ printer.status }}</p>
             <p><b>IP:</b> {{ printer.ip }}</p>
             <p><b>Pages:</b> {{ printer.page_count }}</p>
-
+            
+            <!-- button to open work history sidebar -->
             <button @click="openHistory(printer)">Work History</button>
           </div>
 
@@ -37,9 +40,8 @@
       </div>
     </div>
 
-    <!-- history panel -->
+    <!-- work history panel -->
     <div v-if="showHistory" class="history-panel">
-
       <div class="history-header">
         <h2>{{ selectedPrinter.name }}</h2>
         <button class="close-btn" @click="showHistory = false">✕</button>
@@ -51,6 +53,7 @@
         <button @click="submitHistory">Add</button>
       </div>
 
+      <!-- formatting for work history entries -->
       <div class="history-content">
         <ul>
           <li v-for="h in history" :key="h.work_id" class="history-item">
@@ -64,6 +67,7 @@
               </div>
             </div>
 
+            <!-- formatting change if editing entry -->
             <div v-if="editingId === h.work_id">
               <input v-model="editText" />
               <button @click="saveEdit(h.work_id)">Save</button>
@@ -73,6 +77,7 @@
               {{ h.notes }}
             </div>
 
+            <!-- creation timestamp -->
             <small>{{ new Date(h.created_at).toLocaleString() }}</small>
 
           </li>
@@ -102,6 +107,7 @@ const newNote = ref("")
 const editingId = ref(null)
 const editText = ref("")
 
+//names of academic buildings
 const academicBuildings = [
   "Engineering and Innovation Hub",
   "Peregrine Dining Hall",
@@ -119,6 +125,8 @@ const academicBuildings = [
   "Van den Berg Hall"
 ]
 
+//groups printers together based on if it is in an academic
+//building and where
 const groupedPrinters = computed(() => {
   let groups = {}
 
@@ -147,6 +155,7 @@ const groupedPrinters = computed(() => {
   return sorted
 })
 
+//loads printers upon mounting
 onMounted(async () => {
   try {
     if (printers.value.length === 0) {
@@ -159,10 +168,12 @@ onMounted(async () => {
   loading.value = false
 })
 
+//toggles building dropdown
 function toggle(building) {
   open.value[building] = !open.value[building]
 }
 
+//opens work history sidebar
 async function openHistory(printer) {
   selectedPrinter.value = printer
   showHistory.value = true
@@ -171,7 +182,7 @@ async function openHistory(printer) {
   history.value = await res.json()
 }
 
-/* create work history entry */
+//create work history entry
 async function submitHistory() {
   if (!newNote.value) return
 
@@ -189,12 +200,13 @@ async function submitHistory() {
   openHistory(selectedPrinter.value)
 }
 
-/* edit work history entry */
+//edit work history entry
 function startEdit(h) {
   editingId.value = h.work_id
   editText.value = h.notes
 }
 
+// save edit for work history entry
 async function saveEdit(id) {
   await fetch(`http://localhost:3000/history/${id}`, {
     method: 'PUT',
@@ -206,7 +218,7 @@ async function saveEdit(id) {
   openHistory(selectedPrinter.value)
 }
 
-/* delete work history entry */
+//delete work history entry
 async function deleteHistory(id) {
   await fetch(`http://localhost:3000/history/${id}`, {
     method: 'DELETE'

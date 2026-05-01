@@ -3,6 +3,7 @@
     <h1>Campus Map</h1>
     <h4>Click on a building to be re-directed</h4>
 
+    <!-- contains map image and links based on clicking the buildings-->
     <div class="map-container">
       <img :src="map" class="map" />
 
@@ -58,6 +59,8 @@
         style="top: 60% ; left: 85%; width: 10%; height: 24%">
       </div>
     </div>
+
+    <!-- site information -->
     <div class="info-section">
       <h2>About This Application</h2>
       <p>
@@ -84,6 +87,7 @@ import map from '../assets/sunyNPcampusMap.png'
 
 const router = useRouter()
 
+//routes building links to other tabs in the site
 function goTo(type) {
   if (type === 'academic') {
     router.push('/academic')
@@ -93,6 +97,7 @@ function goTo(type) {
 }
 </script>
 
+<!-- stylesheet for home page -->
 <style scoped>
 .home {
   padding: 20px;

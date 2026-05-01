@@ -10,6 +10,7 @@ body {
     font-family: Arial, sans-serif;
 }
 
+/* academic and dorms */
 .academic, .dorms {
     padding: 20px;
 }
@@ -139,6 +140,7 @@ body {
     background: #ededed;
 }
 
+/* navbar */
 nav {
     display: flex;
     justify-content: space-between;
@@ -224,7 +226,7 @@ button {
   color: red;
 }
 
-
+/* problem printer notification tab */
 .warning-wrapper {
     position: relative;
     margin-left: 20px;

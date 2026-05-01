@@ -1,7 +1,7 @@
 <template>
   <div class="supply-log">
 
-    <!-- TONER -->
+    <!-- toner section -->
     <div class="section">
       <div class="section-header">
         <h3>Toner</h3>
@@ -10,6 +10,7 @@
         </button>
       </div>
 
+      <!-- toner form -->
       <div v-if="showTonerForm" class="add-form">
         <select v-model="newToner.model">
           <option value="">Select model...</option>
@@ -20,6 +21,7 @@
         <span v-if="tonerMsg" class="msg">{{ tonerMsg }}</span>
       </div>
 
+      <!-- entry description-->
       <table v-if="tonerLog.length">
         <thead>
           <tr><th>Model</th><th>Count</th><th>Counted By</th><th>Date</th><th></th></tr>
@@ -33,16 +35,18 @@
             <td><button class="del-btn" @click="deleteToner(e.log_id)">✕</button></td>
           </tr>
         </tbody>
+        <!-- stock totals based on entered information -->
         <tfoot>
           <tr v-for="(total, model) in tonerTotals" :key="model">
             <td colspan="5"><strong>Total {{ model }}: {{ total }}</strong></td>
           </tr>
         </tfoot>
       </table>
+      <!-- display for if there are no entries-->
       <p v-else class="empty">No toner entries yet.</p>
     </div>
 
-    <!-- PAPER -->
+    <!-- paper section -->
     <div class="section">
       <div class="section-header">
         <h3>Paper</h3>
@@ -51,12 +55,13 @@
         </button>
       </div>
 
+      <!-- paper form -->
       <div v-if="showPaperForm" class="add-form">
         <input v-model.number="newPaper.quantity" type="number" min="0" placeholder="Boxes" />
         <button class="submit-btn" @click="submitPaper">Submit</button>
         <span v-if="paperMsg" class="msg">{{ paperMsg }}</span>
       </div>
-
+      <!-- entry description -->
       <table v-if="paperLog.length">
         <thead>
           <tr><th>Count (boxes)</th><th>Counted By</th><th>Date</th><th></th></tr>
@@ -69,10 +74,12 @@
             <td><button class="del-btn" @click="deletePaper(e.log_id)">✕</button></td>
           </tr>
         </tbody>
+        <!-- stock totals based on entered information -->
         <tfoot>
           <tr><td colspan="4"><strong>Total Boxes: {{ paperTotal }}</strong></td></tr>
         </tfoot>
       </table>
+      <!-- display for if there are no entries-->
       <p v-else class="empty">No paper entries yet.</p>
     </div>
 
@@ -84,12 +91,14 @@ import { ref, computed, onMounted } from 'vue';
 
 const props = defineProps({ location: Object, user: Object });
 
+//toner models
 const tonerModels = [
   '650A BLK', '650A Cyan', '650A Mag', '650A Yel',
   '507X BLK', '507A Cyan', '507A Mag', '507A Yel',
   '90X', '81X', '37X', '25X', '14X', '87A', '89A', '64X'
 ];
 
+//setting empty variables for future use
 const tonerLog = ref([]);
 const paperLog = ref([]);
 const newToner = ref({ model: '', quantity: 0 });
@@ -99,11 +108,13 @@ const paperMsg = ref('');
 const showTonerForm = ref(false);
 const showPaperForm = ref(false);
 
+//fetch toner and paper data
 onMounted(() => {
   fetchToner();
   fetchPaper();
 });
 
+//fetch toner information and store it in the log
 async function fetchToner() {
   try {
     const res = await fetch(`http://localhost:3000/toner/${props.location.location_id}`);
@@ -111,6 +122,7 @@ async function fetchToner() {
   } catch (e) { console.error(e); }
 }
 
+//fetch paper information and store it in the log
 async function fetchPaper() {
   try {
     const res = await fetch(`http://localhost:3000/paper/${props.location.location_id}`);
@@ -118,6 +130,7 @@ async function fetchPaper() {
   } catch (e) { console.error(e); }
 }
 
+//submits a new entry in the toner log and displays
 async function submitToner() {
   if (!newToner.value.model || newToner.value.quantity < 0) {
     tonerMsg.value = 'Select a model and enter a quantity.';
@@ -144,6 +157,7 @@ async function submitToner() {
   }
 }
 
+//submits a new entry in the paper log and displays
 async function submitPaper() {
   if (newPaper.value.quantity < 0) {
     paperMsg.value = 'Enter a valid quantity.';
@@ -169,16 +183,20 @@ async function submitPaper() {
   }
 }
 
+//deletes an entry from the toner log
 async function deleteToner(log_id) {
   await fetch(`http://localhost:3000/toner/${log_id}`, { method: 'DELETE' });
   fetchToner();
 }
 
+//deletes an entry from the paper log
 async function deletePaper(log_id) {
   await fetch(`http://localhost:3000/paper/${log_id}`, { method: 'DELETE' });
   fetchPaper();
 }
 
+//computates the toner stock total for each model of printer
+//based on each entry
 const tonerTotals = computed(() =>
   tonerLog.value.reduce((acc, e) => {
     acc[e.toner_model] = (acc[e.toner_model] || 0) + e.quantity;
@@ -186,8 +204,11 @@ const tonerTotals = computed(() =>
   }, {})
 );
 
+//computates the paper box stock total for each location
+//based on each entry
 const paperTotal = computed(() => paperLog.value.reduce((sum, e) => sum + e.quantity, 0));
 
+//formats the date for the storage entries
 function formatDate(dt) {
   return new Date(dt).toLocaleDateString('en-US', {
     month: 'short', day: 'numeric', year: 'numeric',
@@ -196,6 +217,7 @@ function formatDate(dt) {
 }
 </script>
 
+<!-- stylesheet for the template -->
 <style scoped>
 .supply-log { display: flex; flex-direction: column; gap: 24px; }
 

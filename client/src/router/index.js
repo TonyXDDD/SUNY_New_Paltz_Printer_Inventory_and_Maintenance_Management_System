@@ -5,6 +5,8 @@ import Dorms from '../views/Dorms.vue'
 import Storage from '../views/Storage.vue'
 import Auth from '../views/Auth.vue'
 
+//set routes to each page, specifies whether or not it requires
+//user authentication
 const routes = [
     { path: '/', component: Home },
     { path: '/Academic', component: Academic, meta: { requiresAuth: true } },
