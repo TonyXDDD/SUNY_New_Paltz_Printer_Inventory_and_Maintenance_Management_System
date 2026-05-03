@@ -15,7 +15,7 @@ npm run dev
 - Server (Express + MySQL backend)
 cd server
 npm install
-node sync.cjs
+node sync.cjs 
 
 #TODO: 
 MYSQL DataBase
