@@ -2,7 +2,7 @@
 Inventory Management System for Department Supplies – Tracks and reports departmental supplies and stock levels.
 
 ## Authored By
-Jonathan Fenner, Joshua Alfarano, Taylor Ascarino, Ananda Feron
+Jonathan Fenner, Joshua Alfarano, Taylor Ascarino, Ananda Feron 
 
 # How to Run
 # Running the project
