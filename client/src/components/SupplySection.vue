@@ -117,7 +117,7 @@ onMounted(() => {
 //fetch toner information and store it in the log
 async function fetchToner() {
   try {
-    const res = await fetch(`http://localhost:3000/toner/${props.location.location_id}`);
+    const res = await fetch(`http://localhost:4000/toner/${props.location.location_id}`);
     tonerLog.value = await res.json();
   } catch (e) { console.error(e); }
 }
@@ -125,7 +125,7 @@ async function fetchToner() {
 //fetch paper information and store it in the log
 async function fetchPaper() {
   try {
-    const res = await fetch(`http://localhost:3000/paper/${props.location.location_id}`);
+    const res = await fetch(`http://localhost:4000/paper/${props.location.location_id}`);
     paperLog.value = await res.json();
   } catch (e) { console.error(e); }
 }
@@ -136,7 +136,7 @@ async function submitToner() {
     tonerMsg.value = 'Select a model and enter a quantity.';
     return;
   }
-  const res = await fetch('http://localhost:3000/toner', {
+  const res = await fetch('http://localhost:4000/toner', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -163,7 +163,7 @@ async function submitPaper() {
     paperMsg.value = 'Enter a valid quantity.';
     return;
   }
-  const res = await fetch('http://localhost:3000/paper', {
+  const res = await fetch('http://localhost:4000/paper', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -185,13 +185,13 @@ async function submitPaper() {
 
 //deletes an entry from the toner log
 async function deleteToner(log_id) {
-  await fetch(`http://localhost:3000/toner/${log_id}`, { method: 'DELETE' });
+  await fetch(`http://localhost:4000/toner/${log_id}`, { method: 'DELETE' });
   fetchToner();
 }
 
 //deletes an entry from the paper log
 async function deletePaper(log_id) {
-  await fetch(`http://localhost:3000/paper/${log_id}`, { method: 'DELETE' });
+  await fetch(`http://localhost:4000/paper/${log_id}`, { method: 'DELETE' });
   fetchPaper();
 }
 
