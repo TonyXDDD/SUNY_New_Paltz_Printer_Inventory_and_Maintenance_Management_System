@@ -54,7 +54,7 @@ async function handleSubmit() {
   try {
     const endpoint = isLogin.value ? 'login' : 'register'
 
-    const res = await fetch(`http://localhost:3000/${endpoint}`, {
+    const res = await fetch(`http://localhost:4000/${endpoint}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

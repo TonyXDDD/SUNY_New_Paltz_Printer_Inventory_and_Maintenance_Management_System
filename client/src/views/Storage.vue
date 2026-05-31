@@ -63,7 +63,7 @@ const openLocations = ref([]);
 
 //fetched location data on mount
 onMounted(async () => {
-  const res = await fetch('http://localhost:3000/locations');
+  const res = await fetch('http://localhost:4000/locations');
   locations.value = await res.json();
 });
 

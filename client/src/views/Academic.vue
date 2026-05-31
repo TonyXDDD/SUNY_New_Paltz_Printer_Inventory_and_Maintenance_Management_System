@@ -178,7 +178,7 @@ async function openHistory(printer) {
   selectedPrinter.value = printer
   showHistory.value = true
 
-  const res = await fetch(`http://localhost:3000/history/${printer.serial_number}`)
+  const res = await fetch(`http://localhost:4000/history/${printer.serial_number}`)
   history.value = await res.json()
 }
 
@@ -186,7 +186,7 @@ async function openHistory(printer) {
 async function submitHistory() {
   if (!newNote.value) return
 
-  await fetch('http://localhost:3000/history', {
+  await fetch('http://localhost:4000/history', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -208,7 +208,7 @@ function startEdit(h) {
 
 // save edit for work history entry
 async function saveEdit(id) {
-  await fetch(`http://localhost:3000/history/${id}`, {
+  await fetch(`http://localhost:4000/history/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ notes: editText.value })
@@ -220,7 +220,7 @@ async function saveEdit(id) {
 
 //delete work history entry
 async function deleteHistory(id) {
-  await fetch(`http://localhost:3000/history/${id}`, {
+  await fetch(`http://localhost:4000/history/${id}`, {
     method: 'DELETE'
   })
 
